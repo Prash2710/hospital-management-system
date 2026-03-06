@@ -51,7 +51,7 @@ public class SignUpRequest {
         this.roles = roles;
 
         // Optional manual validation (same spirit as your compact constructor)
-        if (username != null && username.isBlank()) {
+        if (username != null && username.trim().isEmpty()) {
             throw new IllegalArgumentException("Username cannot be blank");
         }
     }
@@ -63,7 +63,7 @@ public class SignUpRequest {
     }
 
     public void setUsername(String username) {
-        if (username != null && username.isBlank()) {
+        if (username != null && username.trim().isEmpty()) {
             throw new IllegalArgumentException("Username cannot be blank");
         }
         this.username = username;

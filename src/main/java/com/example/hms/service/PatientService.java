@@ -1,6 +1,7 @@
 package com.example.hms.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.hms.dto.CreatePatientRequest;
 import com.example.hms.dto.PatientDTO;
 import com.example.hms.entity.Patient;
+import com.example.hms.entity.User;
 import com.example.hms.repository.PatientRepository;
 import com.example.hms.repository.UserRepository;
 
@@ -25,7 +27,7 @@ public class PatientService {
 
     public PatientDTO createPatient(CreatePatientRequest request) {
 
-        var user = userRepository.findById(request.getUserId())
+        User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Patient patient = new Patient();
@@ -91,7 +93,7 @@ public class PatientService {
         return patientRepository.findAll()
                 .stream()
                 .map(this::convertToDTO)
-                .toList(); // Java 17
+                .collect(Collectors.toList()); // Java 8
     }
 
     public void deletePatient(Long id) {
@@ -125,3 +127,4 @@ public class PatientService {
         return dto;
     }
 }
+	

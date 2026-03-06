@@ -183,10 +183,10 @@ public class MedicalRecord {
     
     // Java 17 helper methods
     public boolean hasLabTests() {
-        return labTests != null && !labTests.isBlank();
+        return labTests != null && !labTests.trim().isEmpty();
     }
     
     public boolean hasPrescription() {
-        return prescription != null && !prescription.isBlank();
+        return prescription != null && !prescription.trim().isEmpty();
     }
 }

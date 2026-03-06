@@ -3,13 +3,15 @@ package com.example.hms.controller;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,10 +28,6 @@ import com.example.hms.repository.RoleRepository;
 import com.example.hms.repository.UserRepository;
 import com.example.hms.security.JWTUtil;
 import com.example.hms.security.UserDetailsImpl;
-
-import javax.validation.Valid;
-//import jakarta.validation.Valid;
-import lombok.experimental.var;
 
 @RestController
 @RequestMapping("/auth")
@@ -71,10 +69,10 @@ public class AuthController {
 
         String token = jwtUtil.generateToken(userDetails);
 
-        // 🔐 extract roles properly
+        // Fixed: .toList() is Java 16+ — use Collectors.toList() for Java 8
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
-                .toList();
+                .collect(Collectors.toList());
 
         JwtResponse response = new JwtResponse(
                 token,
@@ -88,11 +86,6 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-
-
-
-
-
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
@@ -103,8 +96,8 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Error: Email is already in use!");
         }
 
-        // Java 17: Using var for type inference
-        var user = new User();
+        // Fixed: replaced var with explicit types (var is Java 10+ only)
+        User user = new User();
         user.setUsername(signUpRequest.getUsername());
         user.setEmail(signUpRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
@@ -112,23 +105,28 @@ public class AuthController {
         user.setLastName(signUpRequest.getLastName());
         user.setPhone(signUpRequest.getPhone());
 
-        var strRoles = signUpRequest.getRoles();
+        Set<String> strRoles = signUpRequest.getRoles();
         Set<Role> roles = new HashSet<>();
 
         if (strRoles == null || strRoles.isEmpty()) {
-            var patientRole = roleRepository.findByName(Role.RoleName.ROLE_PATIENT)
+            Role patientRole = roleRepository.findByName(Role.RoleName.ROLE_PATIENT)
                     .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
             roles.add(patientRole);
         } else {
+            // Fixed: replaced switch arrow syntax with traditional if-else (Java 8 compatible)
             strRoles.forEach(role -> {
-                // Java 17: Enhanced switch expression
-                var foundRole = switch (role.toLowerCase()) {
-                    case "admin" -> roleRepository.findByName(Role.RoleName.ROLE_ADMIN);
-                    case "doctor" -> roleRepository.findByName(Role.RoleName.ROLE_DOCTOR);
-                    case "receptionist" -> roleRepository.findByName(Role.RoleName.ROLE_RECEPTIONIST);
-                    default -> roleRepository.findByName(Role.RoleName.ROLE_PATIENT);
-                };
-                foundRole.ifPresent(roles::add);
+                String roleLower = role.toLowerCase();
+                Role.RoleName roleName;
+                if (roleLower.equals("admin")) {
+                    roleName = Role.RoleName.ROLE_ADMIN;
+                } else if (roleLower.equals("doctor")) {
+                    roleName = Role.RoleName.ROLE_DOCTOR;
+                } else if (roleLower.equals("receptionist")) {
+                    roleName = Role.RoleName.ROLE_RECEPTIONIST;
+                } else {
+                    roleName = Role.RoleName.ROLE_PATIENT;
+                }
+                roleRepository.findByName(roleName).ifPresent(roles::add);
             });
         }
 

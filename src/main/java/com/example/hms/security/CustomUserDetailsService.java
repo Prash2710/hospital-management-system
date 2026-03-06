@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -33,7 +34,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         List<GrantedAuthority> authorities = user.getRoles().stream()
                 .map(role -> (GrantedAuthority)
                         new SimpleGrantedAuthority(role.getName().name()))
-                .toList();
+                .collect(Collectors.toList());
 
         return UserDetailsImpl.build(user, authorities);
     }
